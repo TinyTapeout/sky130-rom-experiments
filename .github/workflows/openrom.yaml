@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        size: [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768]
+        size: [128, 256, 512, 1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: install OpenRAM
