@@ -8,6 +8,7 @@ import klayout.db as pya
 
 WORD_BITS = 8
 
+
 def unchunk_data(cols: int, word_bits: int, words_per_row: int, data: List[List[int]]):
     """
     Unchunks and unscrambles data that was previously chunked and scrambled. This is meant to reverse
@@ -33,6 +34,7 @@ def unchunk_data(cols: int, word_bits: int, words_per_row: int, data: List[List[
         flat_data.pop()
 
     return flat_data
+
 
 parser = argparse.ArgumentParser(description="Dump a binary from a ROM GDS file")
 parser.add_argument("input_gds", help="Input GDS ROM file")
