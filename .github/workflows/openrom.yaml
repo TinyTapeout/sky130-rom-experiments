@@ -1,0 +1,51 @@
+name: Build ROM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-rom:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        size: [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768]
+    steps:
+      - uses: actions/checkout@v4
+      - name: install OpenRAM
+        run: |
+          git clone https://github.com/VLSIDA/OpenRAM
+          cd OpenRAM
+          git apply ../openram.patch
+          ./install_conda.sh
+          source miniconda/bin/activate
+          make sky130-pdk
+          make sky130-install
+      - name: Build ROM
+        working-directory: OpenRAM
+        run: |
+          source miniconda/bin/activate
+          cd macros
+
+          cat <<EOF > rom_configs/sky130_rom_${{ matrix.size }}.py
+          word_size = 1
+          check_lvsdrc = True
+          rom_data = "rom_configs/rom_${{ matrix.size }}.bin"
+          data_type = "bin"
+          output_name = "sky130_rom_${{ matrix.size }}"
+          output_path = "macro/{output_name}".format(**locals())
+
+          import os
+          exec(open(os.path.join(os.path.dirname(__file__), 'sky130_rom_common.py')).read())
+          EOF
+
+          # Generate a dummy ROM file filled with 0x55:
+          dd if=/dev/zero bs=1 count=${{ matrix.size }} | tr '\000' '\125' > rom_configs/rom_${{ matrix.size }}.bin
+
+          make sky130_rom_${{ matrix.size }}
+      - name: Upload artifact
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ROM_${{ matrix.size }}
+          path: |
+            OpenRAM/macros/sky130_rom_${{ matrix.size }}/*
